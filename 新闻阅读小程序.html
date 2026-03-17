@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>知讯 - 2026智能新闻阅读</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .iphone-container {
+            width: 375px;
+            height: 812px;
+            background: #F8F9FA;
+            border: 8px solid #333;
+            border-radius: 40px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        .page {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 80px; /* Space for Nav */
+        }
+        .active-page {
+            display: flex;
+        }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        :root{
+            --detail-bottom-bar-h: 76px;
+            --global-nav-h: 80px;
+        }
+
+        /* 详情页底部有固定操作栏，需要额外留白避免遮挡评论区末尾 */
+        #detail-page{
+            padding-bottom: calc(var(--global-nav-h) + var(--detail-bottom-bar-h));
+        }
+
+        /* 防止评论长文本/按钮把宽度撑出手机屏幕 */
+        #comments-list{
+            overflow-x: hidden;
+        }
+        #comments-list p{
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        /* 轻量 toast（发布/收藏等反馈） */
+        .toast{
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: calc(var(--global-nav-h) + var(--detail-bottom-bar-h) + 18px); /* 避开底部导航+操作栏 */
+            background: rgba(17, 24, 39, 0.92);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 9999px;
+            font-size: 12px;
+            line-height: 1;
+            z-index: 60;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .18s ease, transform .18s ease;
+            white-space: nowrap;
+        }
+        .toast.show{
+            opacity: 1;
+            transform: translateX(-50%) translateY(-6px);
+        }
+    </style>
+</head>
+<body>
+<div class="iphone-container">
+<!-- 1. 首页 -->
+<div class="page active-page" id="home-page">
+<!-- Header -->
+<header class="sticky top-0 bg-white/80 backdrop-blur-md px-6 py-4 flex items-center justify-between z-10">
+<h1 class="text-xl font-bold text-gray-900 leading-tight">知讯资讯</h1>
+<span class="iconify text-2xl text-gray-600" data-icon="solar:magnifer-linear"></span>
+</header>
+<!-- Category Tabs -->
+<div class="px-4 py-3 flex gap-4 overflow-x-auto whitespace-nowrap bg-white border-b border-gray-100">
+<span class="text-[#1A73E8] font-bold border-b-2 border-[#1A73E8] pb-1 cursor-pointer">推荐</span>
+<span class="text-gray-500 cursor-pointer">科技</span>
+<span class="text-gray-500 cursor-pointer">财经</span>
+<span class="text-gray-500 cursor-pointer">国际</span>
+<span class="text-gray-500 cursor-pointer">体育</span>
+<span class="text-gray-500 cursor-pointer">娱乐</span>
+</div>
+<!-- News List -->
+<div class="p-4 space-y-4">
+<!-- News Item 1 -->
+<div class="bg-white p-4 rounded-[24px] flex gap-4 shadow-sm active:scale-95 transition-transform cursor-pointer" onclick="openArticle('a1')">
+<div class="flex-1 space-y-2">
+<h3 class="text-[17px] font-medium text-gray-900 leading-snug line-clamp-2">2026年全球量子计算峰会开幕：中国领跑量子通信商业化应用</h3>
+<div class="flex items-center text-[12px] text-gray-400 gap-3">
+<span>科技日报</span>
+<span>4.2w 阅读</span>
+<span>10分钟前</span>
+</div>
+</div>
+<img alt="Quantum Computing News" class="w-24 h-24 rounded-2xl object-cover bg-gray-100" src="https://modao.cc/agent-py/media/generated_images/2026-03-17/1c4f0e519eee4820b2a5858dc3994b91.jpg"/>
+</div>
+<!-- News Item 2 -->
+<div class="bg-white p-4 rounded-[24px] flex gap-4 shadow-sm active:scale-95 transition-transform cursor-pointer" onclick="openArticle('a2')">
+<div class="flex-1 space-y-2">
+<h3 class="text-[17px] font-medium text-gray-900 leading-snug line-clamp-2">新型“舒缓式”城市绿地系统在北京正式上线 旨在缓解职场压力</h3>
+<div class="flex items-center text-[12px] text-gray-400 gap-3">
+<span>生活周刊</span>
+<span>2.8w 阅读</span>
+<span>1小时前</span>
+</div>
+</div>
+<img alt="Urban Greenery System" class="w-24 h-24 rounded-2xl object-cover bg-gray-100" src="https://modao.cc/agent-py/media/generated_images/2026-03-17/55780e4b41f2417e8fa321ea2345c428.jpg"/>
+</div>
+<!-- News Item 3 -->
+<div class="bg-white p-4 rounded-[24px] flex gap-4 shadow-sm active:scale-95 transition-transform cursor-pointer" onclick="openArticle('a3')">
+<div class="flex-1 space-y-2">
+<h3 class="text-[17px] font-medium text-gray-900 leading-snug line-clamp-2">火星前哨基地首批蔬菜收成良好 人类深空探索迈出关键一步</h3>
+<div class="flex items-center text-[12px] text-gray-400 gap-3">
+<span>航天资讯</span>
+<span>8.5w 阅读</span>
+<span>3小时前</span>
+</div>
+</div>
+<img alt="Mars Colony Harvest" class="w-24 h-24 rounded-2xl object-cover bg-gray-100" src="https://modao.cc/agent-py/media/generated_images/2026-03-17/ebdfa40a810344e69a34fc97028c937f.jpg"/>
+</div>
+<!-- News Item 4 -->
+<div class="bg-white p-4 rounded-[24px] flex gap-4 shadow-sm active:scale-95 transition-transform cursor-pointer" onclick="openArticle('a4')">
+<div class="flex-1 space-y-2">
+<h3 class="text-[17px] font-medium text-gray-900 leading-snug line-clamp-2">虚拟偶像产业转型：AI数字生命如何与粉丝建立真实情感连接？</h3>
+<div class="flex items-center text-[12px] text-gray-400 gap-3">
+<span>娱乐前线</span>
+<span>1.5w 阅读</span>
+<span>5小时前</span>
+</div>
+</div>
+<img alt="Virtual Idol Industry" class="w-24 h-24 rounded-2xl object-cover bg-gray-100" src="https://modao.cc/agent-py/media/generated_images/2026-03-17/9864e3f0a18149f9a12ba8d3933038a8.jpg"/>
+</div>
+</div>
+</div>
+<!-- 2. 新闻详情页 -->
+<div class="page bg-white" id="detail-page">
+<!-- Detail Header -->
+<header class="sticky top-0 bg-white/90 backdrop-blur-md px-4 py-4 flex items-center border-b border-gray-50 z-20">
+<button class="mr-4" onclick="showPage('home-page')">
+<span class="iconify text-2xl" data-icon="solar:alt-arrow-left-linear"></span>
+</button>
+<h1 class="text-sm font-medium text-gray-400 truncate flex-1" id="detail-topic">新闻详情</h1>
+</header>
+<article class="p-6">
+<h2 class="text-2xl font-bold text-gray-900 leading-tight mb-4" id="detail-title">—</h2>
+<div class="flex items-center gap-3 mb-6">
+<img alt="Author" class="w-10 h-10 rounded-full bg-gray-100" src="https://modao.cc/agent-py/media/generated_images/2026-03-17/626ca7f7e82a46b6a4542e8e986fe9f4.jpg"/>
+<div>
+<p class="text-[15px] font-medium text-gray-800" id="detail-author">—</p>
+<p class="text-[12px] text-gray-400" id="detail-updated">—</p>
+</div>
+</div>
+<div class="space-y-4 text-[17px] text-gray-700 leading-[1.8]" id="detail-body"></div>
+<!-- 评论区 -->
+<div class="mt-12 border-t border-gray-100 pt-8 pb-10">
+<h3 class="text-lg font-bold text-gray-900 mb-6" id="comments-title">热门评论 (<span id="comments-count">0</span>)</h3>
+<div class="space-y-6" id="comments-list"></div>
+</div>
+</article>
+<!-- Detail Bottom Bar (放在手机容器内，而不是浏览器窗口) -->
+<div class="absolute bottom-20 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-4 z-30">
+<div class="flex-1 bg-gray-100 rounded-full px-4 py-2 flex items-center gap-2">
+<span class="iconify text-gray-400" data-icon="solar:chat-round-dots-linear"></span>
+<input class="bg-transparent border-none text-sm focus:outline-none w-full" id="publish-input" placeholder="写下你的评论…" type="text"/>
+</div>
+<button class="bg-[#1A73E8] text-white px-4 py-2 rounded-full text-sm font-medium active:scale-95 transition-transform disabled:opacity-60 disabled:active:scale-100" id="publish-btn" onclick="publishThought()">发布</button>
+<div class="flex items-center gap-3 ml-2">
+<div class="relative flex flex-col items-center" onclick="toggleFavorite()">
+<span class="iconify text-2xl text-gray-400 transition-colors" data-icon="solar:heart-linear" id="heart-icon"></span>
+</div>
+<div class="relative">
+<span class="iconify text-2xl text-gray-400" data-icon="solar:chat-round-dots-linear"></span>
+<span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full" id="comment-badge">0</span>
+</div>
+<span class="iconify text-2xl text-gray-400" data-icon="solar:share-linear"></span>
+</div>
+</div>
+</div>
+<!-- 3. 我的页面 -->
+<div class="page bg-gray-50" id="profile-page">
+<!-- User Info -->
+<div class="bg-white px-6 pt-12 pb-8 rounded-b-[40px] shadow-sm flex items-center gap-5">
+<div class="relative">
+<img alt="User Avatar" class="w-20 h-20 rounded-full bg-gray-200 p-1 border-2 border-dashed border-[#1A73E8]" src="https://modao.cc/agent-py/media/generated_images/2026-03-17/99bc2692a6974effbaa8a3457e7b5d88.jpg"/>
+<div class="absolute bottom-0 right-0 bg-[#1A73E8] p-1.5 rounded-full text-white">
+<span class="iconify text-xs" data-icon="solar:camera-bold"></span>
+</div>
+</div>
+<div>
+<h2 class="text-2xl font-bold text-gray-900">阿基米德_2026</h2>
+<p class="text-sm text-gray-400 mt-1">知讯资深阅读者 · 加入 125 天</p>
+<div class="flex gap-4 mt-3">
+<div class="text-center"><span class="block font-bold">128</span><span class="text-[10px] text-gray-400 uppercase">粉丝</span></div>
+<div class="text-center"><span class="block font-bold">452</span><span class="text-[10px] text-gray-400 uppercase">关注</span></div>
+<div class="text-center"><span class="block font-bold">1.2k</span><span class="text-[10px] text-gray-400 uppercase">获赞</span></div>
+</div>
+</div>
+</div>
+<!-- Tabs Navigation -->
+<div class="flex mt-6 px-6 relative">
+<button class="flex-1 py-3 text-center transition-all border-b-2 border-[#1A73E8] text-[#1A73E8] font-bold" id="tab-comments-btn" onclick="switchSubTab('comments')">我的评论</button>
+<button class="flex-1 py-3 text-center transition-all border-b-2 border-transparent text-gray-400 font-medium" id="tab-favs-btn" onclick="switchSubTab('favs')">我的收藏</button>
+</div>
+<!-- Sub Tab Content: Comments -->
+<div class="p-4 space-y-4" id="subtab-comments">
+<div class="hidden text-center text-sm text-gray-400 py-10" id="my-comments-empty">暂无评论，去详情页发一条吧</div>
+<div class="space-y-4" id="my-comments-list"></div>
+</div>
+<!-- Sub Tab Content: Favs (Hidden by default) -->
+<div class="hidden p-4 space-y-3" id="subtab-favs">
+<div class="hidden text-center text-sm text-gray-400 py-10" id="my-favs-empty">暂无收藏，去详情页点个爱心吧</div>
+<div class="space-y-3" id="my-favs-list"></div>
+</div>
+</div>
+<!-- Global Navigation Bar -->
+<nav class="absolute bottom-0 left-0 right-0 h-20 bg-white/90 backdrop-blur-xl border-t border-gray-100 flex items-center justify-between px-16 pb-4 z-40">
+<button class="flex flex-col items-center gap-1 text-[#1A73E8]" id="nav-home" onclick="showPage('home-page')">
+<span class="iconify text-2xl" data-icon="solar:home-smile-angle-bold" id="home-icon"></span>
+<span class="text-[10px] font-bold tracking-wider">首页</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-gray-300" id="nav-profile" onclick="showPage('profile-page')">
+<span class="iconify text-2xl" data-icon="solar:user-circle-linear" id="profile-icon"></span>
+<span class="text-[10px] font-medium tracking-wider">我的</span>
+</button>
+</nav>
+</div>
+<script>
+    const FALLBACK_PLACEHOLDER_SVG = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+            <defs>
+                <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#E8F0FE"/>
+                    <stop offset="1" stop-color="#F8FAFF"/>
+                </linearGradient>
+            </defs>
+            <rect width="800" height="600" fill="url(#g)"/>
+            <circle cx="640" cy="160" r="70" fill="#D2E3FC"/>
+            <path d="M140 440 L320 260 L420 360 L520 300 L660 440 Z" fill="#C7D2FE"/>
+            <path d="M140 460 L320 300 L420 390 L520 330 L660 460 Z" fill="#93C5FD" opacity="0.55"/>
+            <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-size="28" fill="#6B7280" font-family="Arial, sans-serif">图片占位</text>
+        </svg>`
+    )}`;
+
+    let openReplyBoxId = null;
+    let replyAutoSeq = 0;
+    let currentArticleId = 'a1';
+    const FAVORITES = new Set();
+
+    function stableImageUrl(seed, w = 800, h = 600) {
+        const s = encodeURIComponent(String(seed || 'img'));
+        const W = Math.max(64, Math.min(1200, Number(w) || 800));
+        const H = Math.max(64, Math.min(1200, Number(h) || 600));
+        // picsum 按 seed 固定出图，链接稳定
+        return `https://picsum.photos/seed/${s}/${W}/${H}`;
+    }
+
+    function inferImgSizeFromClass(img) {
+        const cls = (img?.className || '');
+        if (cls.includes('w-8') && cls.includes('h-8')) return [64, 64];
+        if (cls.includes('w-10') && cls.includes('h-10')) return [80, 80];
+        if (cls.includes('w-16') && cls.includes('h-16')) return [128, 128];
+        if (cls.includes('w-20') && cls.includes('h-20')) return [160, 160];
+        if (cls.includes('w-24') && cls.includes('h-24')) return [192, 192];
+        // 正文大图/不确定尺寸
+        return [800, 520];
+    }
+
+    const ARTICLES = {
+        a1: {
+            id: 'a1',
+            topic: '量子计算商业化进展',
+            title: '2026年全球量子计算峰会开幕：中国领跑量子通信商业化应用',
+            author: '张晓华',
+            updated: '更新于 2026-03-17 10:25',
+            body: [
+                { type: 'p', text: '三月的深圳，繁花似锦。今天上午，备受瞩目的“2026全球量子计算峰会”在深圳国际会展中心正式拉开帷幕。' },
+                { type: 'img', alt: 'Conference', src: stableImageUrl('a1-body', 900, 520) },
+                { type: 'p', text: '作为本届峰会的重头戏，中国量子通信联盟发布了《2026-2030量子网络商用白皮书》。数据显示，我国已建成覆盖全国30个主要城市的量子加密通信干线。' },
+                { type: 'p', text: '专家表示，随着超导量子芯片良品率的突破，预计在2027年，普通消费者也将能体验到基于量子云的即时算力服务。' }
+            ],
+            comments: [
+                {
+                    id: 'c1',
+                    user: '思考者王某',
+                    time: '2小时前',
+                    text: '这才是硬科技，终于看到量子技术走进生活了，非常期待配套的软件生态。',
+                    replies: [
+                        { id: 'r1', user: '数码达人小李', time: '1小时前', replyTo: '思考者王某', text: '没错，据说明年会有首批支持量子加密的国产手机发布！' }
+                    ]
+                },
+                {
+                    id: 'c2',
+                    user: '李木木',
+                    time: '4小时前',
+                    text: '想问下这个安全干线对民用宽带收费有影响吗？',
+                    replies: []
+                }
+            ]
+        },
+        a2: {
+            id: 'a2',
+            topic: '城市生活与减压',
+            title: '新型“舒缓式”城市绿地系统在北京正式上线 旨在缓解职场压力',
+            author: '周雨晴',
+            updated: '更新于 2026-03-16 19:40',
+            body: [
+                { type: 'p', text: '北京启动新型“舒缓式”城市绿地系统试点，通过分级步道、冥想角落与微型运动站点，帮助市民在通勤与午休间快速放松。' },
+                { type: 'img', alt: 'Green', src: stableImageUrl('a2-body', 900, 520) },
+                { type: 'p', text: '相关部门表示，后续将结合人流热力图动态调整绿地配置，提升可达性与使用效率。' }
+            ],
+            comments: [
+                { id: 'c1', user: '一颗薄荷糖', time: '30分钟前', text: '希望我们小区旁边也能安排一个冥想角落。', replies: [] }
+            ]
+        },
+        a3: {
+            id: 'a3',
+            topic: '深空探索',
+            title: '火星前哨基地首批蔬菜收成良好 人类深空探索迈出关键一步',
+            author: '韩泽宇',
+            updated: '更新于 2026-03-15 08:15',
+            body: [
+                { type: 'p', text: '火星前哨基地通过封闭生态舱实现首次稳定蔬菜产出，为长期驻留与补给自给提供了关键验证。' },
+                { type: 'img', alt: 'Mars', src: stableImageUrl('a3-body', 900, 520) },
+                { type: 'p', text: '科研团队表示，下一阶段将尝试多品种轮作，并完善水循环与微生物土壤体系。' }
+            ],
+            comments: []
+        },
+        a4: {
+            id: 'a4',
+            topic: 'AI 数字生命',
+            title: '虚拟偶像产业转型：AI数字生命如何与粉丝建立真实情感连接？',
+            author: '林可欣',
+            updated: '更新于 2026-03-14 14:05',
+            body: [
+                { type: 'p', text: '随着多模态与记忆系统的成熟，虚拟偶像正在从“内容输出者”转向“关系经营者”，以更持续的互动建立陪伴感。' },
+                { type: 'img', alt: 'Idol', src: stableImageUrl('a4-body', 900, 520) },
+                { type: 'p', text: '业内也提示需明确边界：数据透明、情感引导规范与未成年人保护，将成为行业底线。' }
+            ],
+            comments: [
+                { id: 'c1', user: '路过的观众', time: '昨天', text: '如果它真的记得我喜欢什么歌，会不会有点吓人？', replies: [] },
+                { id: 'c2', user: '粉丝团管理员', time: '昨天', text: '关键是透明度和可控性，别做成“情感绑架”。', replies: [] }
+            ]
+        }
+    };
+
+    function ensureToastRoot() {
+        const root = document.querySelector('.iphone-container');
+        if (!root) return null;
+        let toast = root.querySelector('#global-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'global-toast';
+            toast.className = 'toast';
+            root.appendChild(toast);
+        }
+        return toast;
+    }
+
+    function showToast(message) {
+        const toast = ensureToastRoot();
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.add('show');
+        window.clearTimeout(showToast._t);
+        showToast._t = window.setTimeout(() => toast.classList.remove('show'), 1600);
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    function countAllComments(article) {
+        const top = article.comments?.length || 0;
+        const replies = (article.comments || []).reduce((acc, c) => acc + (c.replies?.length || 0), 0);
+        return top + replies;
+    }
+
+    function formatSnippet(text, maxLen = 36) {
+        const s = String(text || '').trim();
+        if (s.length <= maxLen) return s;
+        return `${s.slice(0, maxLen)}…`;
+    }
+
+    function scrollToComments() {
+        const page = document.getElementById('detail-page');
+        const anchor = document.getElementById('comments-title');
+        if (!page || !anchor) return;
+        // 在 page 自己的滚动容器内定位
+        page.scrollTo({ top: anchor.offsetTop - 16, behavior: 'smooth' });
+    }
+
+    function updateHeartUI() {
+        const icon = document.getElementById('heart-icon');
+        if (!icon) return;
+        const isFav = FAVORITES.has(currentArticleId);
+        icon.setAttribute('data-icon', isFav ? 'solar:heart-bold' : 'solar:heart-linear');
+        icon.classList.remove('text-gray-400', 'text-red-500');
+        icon.classList.add(isFav ? 'text-red-500' : 'text-gray-400');
+    }
+
+    function renderDetail(articleId) {
+        const article = ARTICLES[articleId];
+        if (!article) return;
+
+        const topicEl = document.getElementById('detail-topic');
+        const titleEl = document.getElementById('detail-title');
+        const authorEl = document.getElementById('detail-author');
+        const updatedEl = document.getElementById('detail-updated');
+        const bodyEl = document.getElementById('detail-body');
+
+        if (topicEl) topicEl.textContent = article.topic || '新闻详情';
+        if (titleEl) titleEl.textContent = article.title || '—';
+        if (authorEl) authorEl.textContent = article.author || '—';
+        if (updatedEl) updatedEl.textContent = article.updated || '—';
+
+        if (bodyEl) {
+            bodyEl.innerHTML = (article.body || []).map(block => {
+                if (block.type === 'img') {
+                    const alt = escapeHtml(block.alt || '');
+                    const src = escapeHtml(block.src || stableImageUrl(`${articleId}-body`, 900, 520));
+                    return `<img alt="${alt}" class="w-full rounded-[20px] my-6" src="${src}"/>`;
+                }
+                return `<p>${escapeHtml(block.text || '')}</p>`;
+            }).join('');
+        }
+
+        updateHeartUI();
+        renderComments(articleId);
+    }
+
+    function renderComments(articleId) {
+        const article = ARTICLES[articleId];
+        if (!article) return;
+
+        const listEl = document.getElementById('comments-list');
+        const countEl = document.getElementById('comments-count');
+        const badgeEl = document.getElementById('comment-badge');
+
+        const total = countAllComments(article);
+        if (countEl) countEl.textContent = String(total);
+        if (badgeEl) badgeEl.textContent = String(total);
+
+        if (!listEl) return;
+
+        const avatarSrc = stableImageUrl(`avatar-${articleId}`, 80, 80);
+        listEl.innerHTML = (article.comments || []).map((c, idx) => {
+            const replyTargetId = `replies-${articleId}-${c.id}`;
+            const replyBoxId = `reply-${articleId}-${c.id}`;
+            const repliesHtml = (c.replies || []).map(r => {
+                const replyBtnBoxId = `reply-${articleId}-${c.id}-${r.id}`;
+                return `
+                    <div class="mt-3">
+                        <p class="text-xs font-bold">${escapeHtml(r.user)} <span class="text-gray-400 font-normal">回复</span> ${escapeHtml(r.replyTo || c.user)}</p>
+                        <p class="text-sm text-gray-600 mt-1">${escapeHtml(r.text)}</p>
+                        <button class="mt-2 text-[#1A73E8] text-xs font-medium" onclick="toggleReplyBox('${replyBtnBoxId}','回复 ${escapeHtml(r.user)}…')">回复</button>
+                    </div>
+                    <div class="hidden mt-3" id="${replyBtnBoxId}" data-article-id="${articleId}" data-comment-id="${c.id}" data-reply-to="${escapeHtml(r.user)}">
+                        <div class="relative w-full">
+                            <input class="w-full bg-white border border-gray-200 rounded-full pl-4 pr-16 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1A73E8]" placeholder="写下你的回复..." type="text"/>
+                            <button class="absolute right-1 top-1 bottom-1 bg-[#1A73E8] text-white px-3 rounded-full text-xs font-medium active:scale-95 transition-transform" onclick="submitReply('${replyBtnBoxId}')">发送</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="space-y-3">
+                    <div class="flex gap-3">
+                        <img alt="User" class="w-8 h-8 rounded-full" src="${stableImageUrl(`u-${c.user}`, 80, 80)}"/>
+                        <div class="flex-1 bg-gray-50 p-4 rounded-[20px]">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-bold">${escapeHtml(c.user)}</span>
+                                <span class="text-xs text-gray-400">${escapeHtml(c.time || '')}</span>
+                            </div>
+                            <p class="text-[15px] text-gray-700">${escapeHtml(c.text)}</p>
+                            <button class="mt-2 text-[#1A73E8] text-xs font-medium" onclick="toggleReplyBox('${replyBoxId}','回复 ${escapeHtml(c.user)}…')">回复</button>
+                            <div class="mt-3 pl-4 border-l-2 border-gray-200 ${((c.replies || []).length ? '' : 'hidden')}" id="${replyTargetId}">
+                                ${repliesHtml}
+                            </div>
+                            <div class="hidden mt-3" id="${replyBoxId}" data-article-id="${articleId}" data-comment-id="${c.id}" data-reply-to="${escapeHtml(c.user)}">
+                                <div class="relative w-full">
+                                    <input class="w-full bg-white border border-gray-200 rounded-full pl-4 pr-16 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1A73E8]" placeholder="写下你的回复..." type="text"/>
+                                    <button class="absolute right-1 top-1 bottom-1 bg-[#1A73E8] text-white px-3 rounded-full text-xs font-medium active:scale-95 transition-transform" onclick="submitReply('${replyBoxId}')">发送</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function openArticle(articleId) {
+        currentArticleId = articleId;
+        renderDetail(articleId);
+        showPage('detail-page');
+        // 进入详情默认不自动滚；由“我的评论/收藏”点击时触发滚动
+    }
+
+    function openArticleToComments(articleId) {
+        openArticle(articleId);
+        window.setTimeout(scrollToComments, 50);
+    }
+
+    function collectMyComments() {
+        const items = [];
+        for (const [aid, a] of Object.entries(ARTICLES)) {
+            for (const c of (a.comments || [])) {
+                if (c.user === '我') {
+                    items.push({
+                        articleId: aid,
+                        articleTitle: a.title,
+                        time: c.time || '',
+                        text: c.text,
+                        type: 'comment'
+                    });
+                }
+                for (const r of (c.replies || [])) {
+                    if (r.user === '我') {
+                        items.push({
+                            articleId: aid,
+                            articleTitle: a.title,
+                            time: r.time || '',
+                            text: r.text,
+                            type: 'reply'
+                        });
+                    }
+                }
+            }
+        }
+        // 简单排序：刚刚优先（无法精确时间就按插入顺序近似）
+        return items.reverse();
+    }
+
+    function renderProfile() {
+        const commentsEmpty = document.getElementById('my-comments-empty');
+        const commentsList = document.getElementById('my-comments-list');
+        const favsEmpty = document.getElementById('my-favs-empty');
+        const favsList = document.getElementById('my-favs-list');
+
+        if (commentsList && commentsEmpty) {
+            const my = collectMyComments();
+            commentsEmpty.classList.toggle('hidden', my.length > 0);
+            commentsList.innerHTML = my.map(item => {
+                const tag = item.type === 'reply' ? '回复' : '评论';
+                return `
+                    <div class="bg-white p-4 rounded-[20px] shadow-sm cursor-pointer active:scale-[0.99] transition-transform" onclick="openArticleToComments('${escapeHtml(item.articleId)}')">
+                        <div class="flex justify-between items-start mb-2">
+                            <p class="text-[15px] font-medium text-gray-900">${escapeHtml('“' + formatSnippet(item.text, 40) + '”')}</p>
+                            <span class="text-[11px] text-gray-400 shrink-0">${escapeHtml(item.time || '')}</span>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded-lg text-xs text-gray-500 flex items-center gap-2">
+                            <span class="px-1.5 py-0.5 rounded-full bg-blue-50 text-[#1A73E8] font-medium">${escapeHtml(tag)}</span>
+                            <span class="truncate">原文：${escapeHtml(formatSnippet(item.articleTitle, 28))}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        if (favsList && favsEmpty) {
+            const favIds = Array.from(FAVORITES);
+            favsEmpty.classList.toggle('hidden', favIds.length > 0);
+            favsList.innerHTML = favIds.map(aid => {
+                const a = ARTICLES[aid];
+                if (!a) return '';
+                return `
+                    <div class="bg-white p-3 rounded-[20px] flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform" onclick="openArticleToComments('${escapeHtml(aid)}')">
+                        <img class="w-16 h-16 rounded-xl bg-gray-100 object-cover" src="${stableImageUrl(`thumb-${aid}`, 160, 160)}" onerror="this.src='${FALLBACK_PLACEHOLDER_SVG}'"/>
+                        <div class="flex-1 overflow-hidden">
+                            <h4 class="text-sm font-bold text-gray-800 truncate">${escapeHtml(a.title)}</h4>
+                            <p class="text-[11px] text-gray-400 mt-1">收藏 · ${escapeHtml(a.topic || '')}</p>
+                        </div>
+                        <button class="shrink-0" onclick="event.stopPropagation(); toggleFavorite('${escapeHtml(aid)}')">
+                            <span class="iconify text-[#1A73E8] text-xl" data-icon="solar:heart-bold"></span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    function publishThought() {
+        const input = document.getElementById('publish-input');
+        const btn = document.getElementById('publish-btn');
+        if (!input || !btn) return;
+
+        const text = (input.value || '').trim();
+        if (!text) {
+            showToast('请先输入评论');
+            input.focus();
+            return;
+        }
+
+        // 立刻在当前文章下“开新楼”（顶层评论），避免看起来像没生效
+        const article = ARTICLES[currentArticleId];
+        if (article) {
+            const newId = `c${Date.now()}`;
+            article.comments = article.comments || [];
+            article.comments.unshift({
+                id: newId,
+                user: '我',
+                time: '刚刚',
+                text,
+                replies: []
+            });
+            renderComments(currentArticleId);
+        }
+
+        btn.disabled = true;
+        const oldText = btn.textContent;
+        btn.textContent = '发送中…';
+
+        window.setTimeout(() => {
+            btn.textContent = oldText;
+            btn.disabled = false;
+            input.value = '';
+
+            showToast('评论已发送');
+            renderProfile();
+        }, 650);
+    }
+
+    function submitReply(replyBoxId) {
+        const box = document.getElementById(replyBoxId);
+        if (!box) return;
+        const input = box.querySelector('input');
+        const text = (input?.value || '').trim();
+        if (!text) {
+            showToast('请先输入回复内容');
+            input?.focus();
+            return;
+        }
+
+        const articleId = box.dataset?.articleId || currentArticleId;
+        const commentId = box.dataset?.commentId;
+        const replyTo = (box.dataset?.replyTo || '').trim();
+
+        const article = ARTICLES[articleId];
+        const comment = article?.comments?.find(c => c.id === commentId);
+        if (!article || !comment) {
+            if (input) input.value = '';
+            box.classList.add('hidden');
+            if (openReplyBoxId === replyBoxId) openReplyBoxId = null;
+            showToast('回复已发送');
+            return;
+        }
+
+        replyAutoSeq += 1;
+        comment.replies = comment.replies || [];
+        comment.replies.push({
+            id: `r${replyAutoSeq}`,
+            user: '我',
+            time: '刚刚',
+            replyTo: replyTo || comment.user,
+            text
+        });
+
+        renderComments(articleId);
+        renderProfile();
+
+        // 清空并收起当前输入框
+        if (input) input.value = '';
+        box.classList.add('hidden');
+        if (openReplyBoxId === replyBoxId) openReplyBoxId = null;
+        showToast('回复已发送');
+    }
+
+    function showPage(pageId) {
+        // Hide all pages
+        document.querySelectorAll('.page').forEach(page => {
+            page.classList.remove('active-page');
+        });
+        // Show target page
+        document.getElementById(pageId).classList.add('active-page');
+        if (pageId === 'profile-page') {
+            renderProfile();
+        }
+
+        // Update nav icons
+        const navHome = document.getElementById('nav-home');
+        const navProfile = document.getElementById('nav-profile');
+        const homeIcon = document.getElementById('home-icon');
+        const profileIcon = document.getElementById('profile-icon');
+
+        if (pageId === 'home-page' || pageId === 'detail-page') {
+            navHome.classList.replace('text-gray-300', 'text-[#1A73E8]');
+            navHome.classList.add('font-bold');
+            homeIcon.setAttribute('data-icon', 'solar:home-smile-angle-bold');
+            
+            navProfile.classList.replace('text-[#1A73E8]', 'text-gray-300');
+            navProfile.classList.remove('font-bold');
+            profileIcon.setAttribute('data-icon', 'solar:user-circle-linear');
+        } else if (pageId === 'profile-page') {
+            navProfile.classList.replace('text-gray-300', 'text-[#1A73E8]');
+            navProfile.classList.add('font-bold');
+            profileIcon.setAttribute('data-icon', 'solar:user-circle-bold');
+            
+            navHome.classList.replace('text-[#1A73E8]', 'text-gray-300');
+            navHome.classList.remove('font-bold');
+            homeIcon.setAttribute('data-icon', 'solar:home-smile-angle-linear');
+        }
+    }
+
+    function switchSubTab(type) {
+        const commentsTab = document.getElementById('subtab-comments');
+        const favsTab = document.getElementById('subtab-favs');
+        const btnComments = document.getElementById('tab-comments-btn');
+        const btnFavs = document.getElementById('tab-favs-btn');
+
+        if (type === 'comments') {
+            commentsTab.classList.remove('hidden');
+            favsTab.classList.add('hidden');
+            btnComments.classList.add('border-[#1A73E8]', 'text-[#1A73E8]', 'font-bold');
+            btnComments.classList.remove('border-transparent', 'text-gray-400', 'font-medium');
+            
+            btnFavs.classList.remove('border-[#1A73E8]', 'text-[#1A73E8]', 'font-bold');
+            btnFavs.classList.add('border-transparent', 'text-gray-400', 'font-medium');
+        } else {
+            favsTab.classList.remove('hidden');
+            commentsTab.classList.add('hidden');
+            btnFavs.classList.add('border-[#1A73E8]', 'text-[#1A73E8]', 'font-bold');
+            btnFavs.classList.remove('border-transparent', 'text-gray-400', 'font-medium');
+            
+            btnComments.classList.remove('border-[#1A73E8]', 'text-[#1A73E8]', 'font-bold');
+            btnComments.classList.add('border-transparent', 'text-gray-400', 'font-medium');
+        }
+    }
+
+    function toggleReplyBox(id) {
+        const box = document.getElementById(id);
+        if (!box) return;
+
+        // 互斥：打开新的时，关闭旧的
+        if (openReplyBoxId && openReplyBoxId !== id) {
+            const prev = document.getElementById(openReplyBoxId);
+            if (prev) prev.classList.add('hidden');
+        }
+
+        const willOpen = box.classList.contains('hidden');
+        if (willOpen) {
+            box.classList.remove('hidden');
+            openReplyBoxId = id;
+            const input = box.querySelector('input');
+            if (input) input.focus();
+        } else {
+            box.classList.add('hidden');
+            if (openReplyBoxId === id) openReplyBoxId = null;
+        }
+    }
+
+    function toggleFavorite(el) {
+        // 允许传入 articleId；不传则使用当前文章
+        const articleId = (typeof el === 'string' && el) ? el : currentArticleId;
+        if (FAVORITES.has(articleId)) {
+            FAVORITES.delete(articleId);
+            if (articleId === currentArticleId) updateHeartUI();
+            showToast('已取消收藏');
+        } else {
+            FAVORITES.add(articleId);
+            if (articleId === currentArticleId) updateHeartUI();
+            showToast('已加入收藏');
+        }
+        renderProfile();
+    }
+
+    // 兼容：旧的 onclick 可能只传 id；如果传了 placeholder，也能设置提示文案
+    const _toggleReplyBox = toggleReplyBox;
+    toggleReplyBox = function(id, placeholder){
+        const box = document.getElementById(id);
+        if (box && typeof placeholder === 'string' && placeholder.trim()) {
+            const input = box.querySelector('input');
+            if (input) input.placeholder = placeholder;
+        }
+        return _toggleReplyBox(id);
+    }
+
+    // 替换不稳定的临时图片链接为本地稳定占位（避免失效）
+    document.addEventListener('DOMContentLoaded', () => {
+        // 把墨刀临时图替换为稳定真实图片（按 seed 固定）
+        let legacyIdx = 0;
+        document.querySelectorAll('img').forEach(img => {
+            const src = img.getAttribute('src') || '';
+            if (src.includes('modao.cc/agent')) {
+                legacyIdx += 1;
+                const [w, h] = inferImgSizeFromClass(img);
+                img.setAttribute('src', stableImageUrl(`legacy-${legacyIdx}`, w, h));
+                img.onerror = () => { img.src = FALLBACK_PLACEHOLDER_SVG; };
+            }
+        });
+
+        // 初始化默认文章
+        renderDetail(currentArticleId);
+        renderProfile();
+
+        // 回车直接发送顶层评论
+        const publishInput = document.getElementById('publish-input');
+        if (publishInput) {
+            publishInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    publishThought();
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>
